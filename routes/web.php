@@ -1,8 +1,26 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Livewire\MyTasks;
+use App\Livewire\TaskManager;
+
 
 Route::view('/', 'welcome');
+
+Route::middleware(['auth', 'verified'])->group(function () {
+    
+    // لوحة التحكم الافتراضية بعد تسجيل الدخول
+    Route::view('dashboard', 'dashboard')->name('dashboard');
+
+    // صفحة إدارة المهام الخاصة بـ مدير النظام (Admin)
+    Route::get('/admin/tasks', TaskManager::class)
+        ->middleware(['admin']) // حماية الصفحة باستخدام Middleware للتحقق من صلاحية المدير
+        ->name('admin.tasks');
+
+    // صفحة المهام الخاصة بـ عضو الفريق (Member)
+    Route::get('/my-tasks', MyTasks::class)
+        ->name('my.tasks');
+});
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
