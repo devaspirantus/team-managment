@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Livewire\MyTasks;
 use App\Livewire\TaskManager;
+use App\Http\Controllers\TaskExcelController;
 
 
 Route::view('/', 'welcome');
@@ -20,6 +21,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // صفحة المهام الخاصة بـ عضو الفريق (Member)
     Route::get('/my-tasks', MyTasks::class)
         ->name('my.tasks');
+});
+
+Route::middleware(['auth', 'verified', 'admin'])->group(function () {
+    Route::get('/admin/tasks/export', [TaskExcelController::class, 'export'])->name('admin.tasks.export');
+    Route::post('/admin/tasks/import', [TaskExcelController::class, 'import'])->name('admin.tasks.import');
 });
 
 Route::view('dashboard', 'dashboard')

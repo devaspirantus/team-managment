@@ -1,113 +1,155 @@
-<div class="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6">
+<div class="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 font-sans text-gray-900 bg-gray-50/50 min-h-screen">
     
-    <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <!-- DGA Styled Header & Actions Bar -->
+    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Task Management</h1>
-            <p class="text-sm text-gray-500">Assign tasks to team members and track performance seamlessly.</p>
+            <h1 class="text-2xl font-bold tracking-tight text-gray-900 leading-snug">Task Management</h1>
+            <p class="text-sm text-gray-600 mt-1">Assign tasks to team members and track performance effortlessly.</p>
+        </div>
+
+        <!-- Excel Actions (DGA Compliant Buttons) -->
+        <div class="flex items-center gap-3">
+            <a href="{{ route('admin.tasks.export') }}" class="px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition shadow-xs flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span>Export Excel</span>
+            </a>
+
+            <form action="{{ route('admin.tasks.import') }}" method="POST" enctype="multipart/form-data" class="m-0">
+                @csrf
+                <label class="cursor-pointer px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 text-xs font-bold rounded-xl transition flex items-center gap-2">
+                    <svg class="w-4 h-4 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                    <span>Import Excel</span>
+                    <input type="file" name="excel_file" required class="hidden" onchange="this.form.submit()">
+                </label>
+            </form>
         </div>
     </div>
 
-    <!-- Success Alert -->
+    <!-- Alert Notification -->
     @if (session()->has('success'))
-        <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm font-medium shadow-sm">
+        <div class="p-4 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-xl text-sm font-semibold shadow-xs">
             {{ session('success') }}
         </div>
     @endif
 
-    <!-- Main Layout Grid (Mobile: Stacked, Desktop: 1/3 Form & 2/3 List) -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Main Content Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         
-        <!-- Left Column: Create Task Form (Sticky on Desktop) -->
-        <div class="lg:col-span-1">
-            <div class="bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-gray-100 lg:sticky lg:top-6 space-y-4">
-                <h2 class="text-lg font-bold text-gray-900 border-b pb-3">Assign New Task</h2>
+        <!-- Left: Form Card -->
+        <div class="lg:col-span-1 bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-5 sticky top-6">
+            <h2 class="text-base font-bold text-gray-900 border-b border-gray-100 pb-3">Assign New Task</h2>
 
-                <form wire:submit.prevent="createTask" class="space-y-4">
-                    <div>
-                        <label for="title" class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">To-Do Title</label>
-                        <input type="text" id="title" wire:model="title" class="w-full h-12 px-4 rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="e.g. Design API architecture" required>
-                        @error('title') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
-                    </div>
+            <form wire:submit.prevent="createTask" class="space-y-4">
+                <div>
+                    <label for="title" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">To-Do Title</label>
+                    <input type="text" id="title" wire:model="title" class="w-full h-11 px-3.5 rounded-xl border-gray-300 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 text-sm font-medium" placeholder="e.g. Design API architecture" required>
+                    @error('title') <span class="text-red-600 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
+                </div>
 
-                    <div>
-                        <label for="assigned_to" class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Assigned To</label>
-                        <select id="assigned_to" wire:model="assigned_to" class="w-full h-12 px-4 rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 text-sm bg-white" required>
-                            <option value="">Select Team Member</option>
-                            @foreach($members as $member)
-                                <option value="{{ $member->id }}">{{ $member->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('assigned_to') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
-                    </div>
+                <div>
+                    <label for="assigned_to" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Assigned To</label>
+                    <select id="assigned_to" wire:model="assigned_to" class="w-full h-11 px-3.5 rounded-xl border-gray-300 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 text-sm font-medium bg-white" required>
+                        <option value="">Select Team Member</option>
+                        @foreach($members as $member)
+                            <option value="{{ $member->id }}">{{ $member->name }}</option>
+                        @endforeach
+                    </select>
+                    @error('assigned_to') <span class="text-red-600 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
+                </div>
 
-                    <div>
-                        <label for="due_duration" class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Due (Duration)</label>
-                        <input type="text" id="due_duration" wire:model="due_duration" class="w-full h-12 px-4 rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="e.g. 2 Days, 4 Hours">
-                        @error('due_duration') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
-                    </div>
+                <div>
+                    <label for="due_duration" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Due (Duration)</label>
+                    <input type="text" id="due_duration" wire:model="due_duration" class="w-full h-11 px-3.5 rounded-xl border-gray-300 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 text-sm font-medium" placeholder="e.g. 2 Days, 4 Hours">
+                    @error('due_duration') <span class="text-red-600 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
+                </div>
 
-                    <div>
-                        <label for="due_date" class="block text-xs font-semibold text-gray-600 uppercase tracking-wider mb-1">Due Date</label>
-                        <input type="date" id="due_date" wire:model="due_date" class="w-full h-12 px-4 rounded-xl border-gray-200 focus:ring-2 focus:ring-indigo-500 text-sm" required>
-                        @error('due_date') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
-                    </div>
+                <div>
+                    <label for="due_date" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Due Date</label>
+                    <input type="date" id="due_date" wire:model="due_date" class="w-full h-11 px-3.5 rounded-xl border-gray-300 focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 text-sm font-medium" required>
+                    @error('due_date') <span class="text-red-600 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
+                </div>
 
-                    <button type="submit" class="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition duration-150 flex items-center justify-center shadow-sm">
-                        Assign Task
-                    </button>
-                </form>
-            </div>
+                <button type="submit" class="w-full h-11 bg-indigo-800 hover:bg-indigo-900 text-white font-bold rounded-xl text-sm transition shadow-xs">
+                    Assign Task
+                </button>
+            </form>
         </div>
 
-        <!-- Right Column: Tasks List & Table (Responsive Card/Table View) -->
+        <!-- Right: Tasks List Cards -->
         <div class="lg:col-span-2 space-y-4">
-            <h3 class="text-lg font-bold text-gray-900">Team Performance & Tasks</h3>
+            <div class="flex items-center justify-between px-1">
+                <h3 class="text-base font-bold text-gray-900">Tasks List</h3>
+                <span class="text-xs font-bold bg-gray-200 text-gray-800 px-3 py-1 rounded-full">Total: {{ $tasks->total() }}</span>
+            </div>
 
-            <div class="space-y-3">
+            <div class="space-y-4">
                 @forelse($tasks as $task)
-                    <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition hover:shadow-md">
+                    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-xs space-y-3 text-left">
                         
-                        <!-- Task Info -->
-                        <div class="space-y-1.5 flex-1">
-                            <div class="flex items-center gap-2 flex-wrap">
-                                <h4 class="font-bold text-gray-900 text-base">{{ $task->title }}</h4>
-                                <span class="px-2.5 py-0.5 text-xs font-bold rounded-full 
-                                    @if($task->task_status === 'done') bg-emerald-100 text-emerald-800 
-                                    @elseif($task->task_status === 'closed') bg-gray-100 text-gray-700 
-                                    @else bg-amber-100 text-amber-800 @endif">
-                                    {{ strtoupper($task->task_status) }}
+                        <!-- Top Row: Title, Status Badges -->
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 pb-3">
+                            <h4 class="font-bold text-gray-900 text-base leading-snug">{{ $task->title }}</h4>
+                            
+                            <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                                <!-- Status Badge -->
+                                <span class="px-2.5 py-1 text-xs font-bold rounded-md uppercase tracking-wider
+                                    @if($task->task_status === 'done') bg-emerald-100 text-emerald-900 border border-emerald-200
+                                    @elseif($task->task_status === 'closed') bg-gray-100 text-gray-800 border border-gray-200
+                                    @else bg-amber-100 text-amber-900 border border-amber-200 @endif">
+                                    {{ $task->task_status }}
                                 </span>
-                            </div>
 
-                            <div class="text-xs text-gray-500 flex flex-wrap gap-x-4 gap-y-1">
-                                <p><strong>Assigned:</strong> <span class="text-gray-700 font-medium">{{ $task->assignedUser->name ?? 'Unassigned' }}</span></p>
-                                <p><strong>Due:</strong> <span class="text-gray-700 font-medium">{{ $task->due_date?->format('Y-m-d') }} ({{ $task->due_duration }})</span></p>
-                                @if($task->finished_date)
-                                    <p class="text-emerald-600"><strong>Finished:</strong> {{ $task->finished_date->format('Y-m-d H:i') }}</p>
+                                <!-- Performance Badge (Ontime / Delay) -->
+                                @if($task->stats)
+                                    <span class="px-2.5 py-1 text-xs font-bold rounded-md uppercase tracking-wider
+                                        @if($task->stats === 'Ontime') bg-blue-100 text-blue-900 border border-blue-200
+                                        @else bg-rose-100 text-rose-900 border border-rose-200 @endif">
+                                        ⏱️ {{ $task->stats }}
+                                    </span>
                                 @endif
                             </div>
                         </div>
 
-                        <!-- Action Button -->
-                        <div class="w-full sm:w-auto flex-shrink-0">
-                            @if($task->task_status === 'done')
-                                <button wire:click="closeTask({{ $task->id }})" class="w-full sm:w-auto px-4 h-10 bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold rounded-xl transition">
-                                    Close Task
-                                </button>
+                        <!-- Details Block (Clean Structured Rows) -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-600 font-medium pt-1">
+                            <div>
+                                <span class="text-gray-500">Assigned To:</span> 
+                                <span class="text-gray-900 font-bold ml-1">{{ $task->assignedUser->name ?? 'Unassigned' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-gray-500">Due Date:</span> 
+                                <span class="text-gray-900 font-bold ml-1">{{ $task->due_date?->format('Y-m-d') }} ({{ $task->due_duration ?? 'N/A' }})</span>
+                            </div>
+                            @if($task->finished_date)
+                                <div class="sm:col-span-2 text-emerald-800 font-bold mt-1">
+                                    <span>Finished Date:</span> {{ $task->finished_date->format('Y-m-d H:i') }}
+                                </div>
                             @endif
                         </div>
 
+                        <!-- Action Button -->
+                        @if($task->task_status === 'done')
+                            <div class="pt-2 border-t border-gray-100 flex justify-end">
+                                <button wire:click="closeTask({{ $task->id }})" class="px-4 py-2 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-xl transition shadow-xs">
+                                    Close Task
+                                </button>
+                            </div>
+                        @endif
+
                     </div>
                 @empty
-                    <div class="bg-white p-8 rounded-2xl text-center border border-gray-100 text-gray-500">
-                        No tasks created yet. Use the form to assign your first task!
+                    <div class="bg-white p-8 rounded-2xl border border-gray-200 text-center text-gray-500 text-sm font-medium">
+                        No tasks created yet. Use the form on the left to assign your first task!
                     </div>
                 @endforelse
             </div>
 
             <!-- Pagination -->
-            <div class="pt-4">
+            <div class="pt-2">
                 {{ $tasks->links() }}
             </div>
         </div>
